@@ -17,6 +17,12 @@
     box-shadow: 1px 1px 0px 2px #a8a8a8;
     font-family: 'Trebuchet MS', sans-serif;
 }
+.HistoryBox{
+  box-shadow: 1px 1px 0px 2px #a8a8a8;
+  padding: 5px;
+  border-radius: 15px;
+  background-color: #fafafa;
+}
 .StudentName {
     transition-property: height;
     transition-duration: 0.1s;
@@ -59,4 +65,16 @@
 .button1:hover{
     color:#ffffff;
     background-color:#383838;
+}
+
+.HistoryCmd
+{
+    color: blue;
+    font-weight: bold;
+    font-family: 'Trebuchet MS', sans-serif;
+}
+.HistoryTime
+{
+    color: #8a2be2;
+    font-family: 'Trebuchet MS', sans-serif;
 }

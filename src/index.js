@@ -3,9 +3,10 @@ import ReactDOM from 'react-dom';
 import './App.css';
 import './styles.css'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import './history_item'
+import HistoryItem from './history_item';
 
-
-const address = 'http://194.67.87.25:443/';//http://localhost:8000/';
+const address ='http://194.67.87.25:443/';// 'http://localhost:8000/';//
 
 async function sendRequest(address) {
   try 
@@ -41,6 +42,19 @@ async function listFromResult(result)
 
   return studentList;
 }
+
+async function fetchHistory(setHistory)
+{
+  var result = await sendRequest(address + 'queue?cmd=get_history');
+  if(result == null)
+    return;
+    
+  var list = await listFromResult(result);
+  list = list.reverse();
+  console.log(list);
+  setHistory(list);
+}
+
 
 async function getStundentsList()
 {
@@ -101,18 +115,43 @@ function MainPage(params)
 {
   const [studentsList, setStudentsList] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState('');
+  const [historyList, setHistory] = useState([]);
+
+  const selectStudentHandler = (uid) =>
+  {
+    if(uid == selectedStudent)
+    {
+      setSelectedStudent('');
+    }
+    else
+    {
+      setSelectedStudent(uid);
+    }
+  }
 
   const moveSelectedStudent = () => 
   {
     if(selectedStudent!='')
     {
       MoveStundentSetList(selectedStudent, setStudentsList);
+      fetchHistory(setHistory);
     }
+  }
+
+  const refreshHandler = () =>
+  {
+    setStudentsAsync(getStundentsList, setStudentsList);
+    fetchHistory(setHistory);
+  }
+  const shuffleStudentStudentsHandler = () =>
+  {
+    setStudentsAsync(shuffleStundentsList, setStudentsList);
+    fetchHistory(setHistory);
   }
 
   if (studentsList.length == 0)
   {
-    setStudentsAsync(getStundentsList, setStudentsList);
+    refreshHandler();
   }
 
   var firstTeacher = studentsList.filter(x => x.teacher == 0);
@@ -124,19 +163,20 @@ function MainPage(params)
         <h1 className='CenterAll'>
         Queue
       </h1>
+
       <table className='CenterBlock'>
         <tbody>
           <tr>
             <td style={{width:'300px'}}>
               <td><h1 className='CenterBlock TeacherName'>{getTeacherName(0)}</h1></td>
               {firstTeacher.map(student => (
-                <tr><td ><Student data={student} setSelected = {setSelectedStudent} selected = {selectedStudent}/></td></tr>
+                <tr><td ><Student data={student} setSelected = {selectStudentHandler} selected = {selectedStudent}/></td></tr>
               ))}
             </td>
             <td>
               <td><h1 className='CenterBlock TeacherName'>{getTeacherName(1)}</h1></td>
               {secondTeacher.map(student => (
-                <tr><td><Student data={student}  setSelected = {setSelectedStudent} selected = {selectedStudent}/></td></tr>
+                <tr><td><Student data={student}  setSelected = {selectStudentHandler} selected = {selectedStudent}/></td></tr>
               ))}
             </td>
           </tr>
@@ -154,18 +194,25 @@ function MainPage(params)
             </td>
             <td style={{width:'100px'}}/>
             <td>
-            <button className='button1' onClick={()=>{setStudentsAsync(getStundentsList, setStudentsList);}}>
+            <button className='button1' onClick={()=>{refreshHandler();}}>
               Refresh list
             </button>
             <p/>
-            <button className='button1' onClick={()=>{setStudentsAsync(shuffleStundentsList, setStudentsList);}}>
+            <button className='button1' onClick={()=>{shuffleStudentStudentsHandler();}}>
               Shuffle
             </button>
             </td>
           </tr>
         </tbody>
       </table>
-      
+      <p/>
+      <table className='CenterBlock HistoryBox'>
+        <tbody>
+          {historyList.map(history => (
+                <HistoryItem cmd = {history.cmd} time={history.time}/>))}
+        </tbody>
+      </table>
+
       </div>
     </div>
   );
