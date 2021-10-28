@@ -5,11 +5,11 @@ import './styles.css';
 function HistoryItem(params)
 {
   return (
-    <tr >
+    <div>
       <td className='HistoryCmd'>{params.cmd}</td>
       <td style={{width:'50px'}}/>
       <td className='HistoryTime'>{params.time}</td>
-    </tr>
+    </div>
   )
 }
 

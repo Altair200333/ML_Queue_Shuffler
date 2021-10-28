@@ -4,94 +4,8 @@ import './App.css';
 import './styles.css'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import './history_item'
-import HistoryItem from './history_item';
-
-const address ='http://194.67.87.25:443/';// 'http://localhost:8000/';//
-
-async function sendRequest(address) {
-  try 
-  {
-    const response = await fetch(address);
-
-    if (!response.ok) 
-    {
-      console.log('Not ok response',response);
-      return null;
-    }
-
-    return response;
-  } 
-  catch (error) 
-  {
-    console.log('Error caught', error);
-    return null;
-  }
-}
-async function listFromResult(result)
-{
-  const data = await result.json();
-
-  var studentList = [];
-
-  for(var i in data)
-  {
-    studentList.push(data[i]);
-  }
-
-  console.log(data);
-
-  return studentList;
-}
-
-async function fetchHistory(setHistory)
-{
-  var result = await sendRequest(address + 'queue?cmd=get_history');
-  if(result == null)
-    return;
-    
-  var list = await listFromResult(result);
-  list = list.reverse();
-  console.log(list);
-  setHistory(list);
-}
-
-
-async function getStundentsList()
-{
-  var result = await sendRequest(address + 'queue?cmd=get_list');
-  if(result == null)
-    return;
-    
-  return listFromResult(result);
-}
-
-async function shuffleStundentsList()
-{
-  var result = await sendRequest(address + 'queue?cmd=mix');
-  if(result == null)
-    return;
-    
-  return listFromResult(result);
-}
-async function MoveStundentSetList(uid, setStudents)
-{
-  var result = await sendRequest(address + 'queue?cmd=move&uid=' + uid);
-  if(result == null)
-    return;
-  
-  var list = await listFromResult(result);
-  setStudents(list);
-}
-
-async function setStudentsAsync(getter, setStudents) 
-{
-  var list = await getter()
-  setStudents(list);
-}
-function getTeacherName(id)
-{
-  return id == 0? 'Alexandr': 'Pert'
-}
+import {MoveStundentSetList, fetchHistory, setStudentsAsync, getStundentsList, shuffleStundentsList, getTeacherName, IncStundentSetList} from './request' 
+import History from './history';
 
 function Student(params)
 {
@@ -106,6 +20,8 @@ function Student(params)
       <div className='StudentName CenterBlock'
         style={{width:'150px', height: hower?'34px':'20px', backgroundColor: params.data.uid == params.selected ? '#e4e3ff' : ''}}>
         {params.data.name}
+        <div style={{width:'20px'}}/>
+        <div style={{color:'#f21fd6'}}>{params.data.priority}</div>
       </div>
     </div>
   );
@@ -137,7 +53,22 @@ function MainPage(params)
       fetchHistory(setHistory);
     }
   }
-
+  const incPriority=()=>
+  {
+    if(selectedStudent!='')
+    {
+      IncStundentSetList(selectedStudent, setStudentsList, '1');
+      fetchHistory(setHistory);
+    }
+  }
+  const DecPriority=()=>
+  {
+    if(selectedStudent!='')
+    {
+      IncStundentSetList(selectedStudent, setStudentsList, '-1');
+      fetchHistory(setHistory);
+    }
+  }
   const refreshHandler = () =>
   {
     setStudentsAsync(getStundentsList, setStudentsList);
@@ -153,14 +84,16 @@ function MainPage(params)
   {
     refreshHandler();
   }
-
+  studentsList.sort(function(a, b) {
+    return b.priority - a.priority;
+  });
   var firstTeacher = studentsList.filter(x => x.teacher == 0);
   var secondTeacher = studentsList.filter(x => x.teacher == 1);
   
   return (
     <div className='CenterAll'>
       <div>
-        <h1 className='CenterAll'>
+      <h1 className='CenterAll' style={{color:'#8d1ff2'}}>
         Queue
       </h1>
 
@@ -191,6 +124,14 @@ function MainPage(params)
               <button className='button1' onClick={moveSelectedStudent}>
                 Switch teacher
               </button>
+              <p/>
+              <button className='button1' onClick={incPriority}>
+                ++priority
+              </button>
+              <p/>
+              <button className='button1' onClick={DecPriority}>
+                --priority
+              </button>
             </td>
             <td style={{width:'100px'}}/>
             <td>
@@ -206,13 +147,8 @@ function MainPage(params)
         </tbody>
       </table>
       <p/>
-      <table className='CenterBlock HistoryBox'>
-        <tbody>
-          {historyList.map(history => (
-                <HistoryItem cmd = {history.cmd} time={history.time}/>))}
-        </tbody>
-      </table>
-
+      <History historyList={historyList}/>
+      
       </div>
     </div>
   );
